@@ -35,10 +35,15 @@ npm install
 
 This project contains the **Front-End Web Application** and two different **Backend Bridges**, depending on where you want to send your data.
 
-### 1. Start the Front-End
+### 1. Launch the Desktop App (Electron) - Recommended
+This wraps the web interface into a standalone desktop window.
 
-Serve the web directory so you can access the interface. You can use any static server, or the one provided by `serve`:
+```bash
+npm run electron
+```
 
+### 2. Alternative: Run in Browser
+If you prefer the browser, serve the directory:
 ```bash
 npx serve
 ```

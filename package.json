@@ -2,12 +2,16 @@
   "name": "handsfree-osc",
   "version": "1.0.0",
   "description": "HandsfreeJS hand tracking → WebSocket → UDP/OSC bridge",
-  "main": "server.js",
+  "main": "main.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js"
+    "dev": "node server.js",
+    "electron": "electron ."
   },
   "dependencies": {
     "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "electron": "^40.8.0"
   }
 }
