@@ -60,7 +60,7 @@ window.currentHandData = null;
 window.currentPoseData = null;
 
 // DOM Elements (assigned in init)
-let btnStart, btnStop, statusBadge, statusText, fpsBadge, logStrip, fpsSlider, fpsSliderVal, checkAutoFps, btnFullscreen, btnToggleUi, btnToggleOsc, selectRes, checkSmoothing, oscTableContainer;
+let btnStart, btnStop, statusBadge, statusText, fpsBadge, logStrip, fpsSlider, fpsSliderVal, checkAutoFps, btnFullscreen, btnToggleOsc, selectRes, checkSmoothing, oscTableContainer;
 
 let isOscHidden = false;
 window.isSmoothing = true;
@@ -75,7 +75,6 @@ function init() {
   // Bind Elements
   btnStart    = document.getElementById('btn-start');
   btnStop     = document.getElementById('btn-stop');
-  statusBadge = document.getElementById('status-badge');
   statusText  = document.getElementById('status-text');
   fpsBadge    = document.getElementById('fps-badge');
   logStrip    = document.getElementById('log-text');
@@ -333,8 +332,15 @@ function processHandData(handsData) {
       // More permissive thresholds:
       // Combine the distance heuristic with Fingerpose's angle calculation.
       // If either one detects a curl, we prioritize the more flexed state.
-      const distCurl = distToPinkyBase < palmSize * 1.05 ? 1 : (distToPinkyBase < palmSize * 1.5 ? 0.5 : 0);
-      entry.curl = Math.max(entry.curl, distCurl);
+      // MUCH less sensitive thresholds to make "Open" the natural state
+      // Closed: < 0.75 | Half: 0.75 - 1.05 | Open: > 1.05
+      const distCurl = distToPinkyBase < palmSize * 0.75 ? 1 : (distToPinkyBase < palmSize * 1.05 ? 0.5 : 0);
+      
+      if (distToPinkyBase > palmSize * 1.15) {
+        entry.curl = 0; // Thumb is clearly out, force open
+      } else {
+        entry.curl = Math.max(entry.curl, distCurl);
+      }
 
       // CUSTOM THUMB DIRECTION OVERRIDE
       // Use Thumb IP (3) to Thumb Tip (4) for the angle calculation
