@@ -3,6 +3,7 @@
 A web-based creative tool that visualizes hand tracking data in real-time using **Handsfree.js** and **p5.js**, and bridges that data out via **OSC** to other creative coding environments (TouchDesigner, Resolume, puredata) and Machine Learning tools like **Wekinator**.
 
 ![HandsfreeOSC Application Screenshot](./screenshot.png)
+![Python Bridge Screenshot](./python_bridge.png)
 
 ## Features
 
@@ -69,7 +70,10 @@ Wekinator expects a single flat list of floats per frame (not separate addresses
 `[palm.x, palm.y, thumb.x, thumb.y, thumb.curl, thumb.dir, index.x, index.y, index.curl, index.dir, middle..., ring..., pinky...]`
 
 **Automated Launcher (Windows):**
-Simply double-click the **`run_bridge.bat`** file inside the `wekinator-bridge` folder. It will automatically handle the environment creation, dependency installation, and launch the GUI for you.
+Simply double-click the **`run_bridge.bat`** file inside the `wekinator-bridge` folder. 
+1. The script will automatically create a Python Virtual Environment (`venv`) if it doesn't exist.
+2. It will install all necessary dependencies (`websockets`, `python-osc`, `pywebview`).
+3. It will launch the premium Desktop App interface.
 
 **Manual Setup:**
 ```bash
@@ -79,7 +83,8 @@ python -m venv venv
 pip install -r requirements.txt
 python main.py
 ```
-*(You can edit `wekinator-bridge/config.txt` to change the destination ports/IPs without touching the code).*
+
+*(You can edit `wekinator-bridge/config.txt` to change the destination ports/IPs without touching the code. You can even click the "Open config.txt" button directly in the App!)*
 
 ## Data Interpretation & Normalization
 
@@ -112,6 +117,13 @@ The finger state calculations follow the logic established by the **Handsfree.js
 - **Tracking Core (`app.js`)**: Manages Handsfree.js, normalises data, calculates custom Thumb heuristics, and handles the WebSocket connection.
 - **Visuals (`sketch.js`)**: A `p5.js` instance that handles the camera capture overlay and drawing the tracking UI.
 - **Bridges (`server.js` or `wekinator-bridge/main.py`)**: Responsible for protocol translation from TCP/WS JSON to UDP OSC.
+
+## Roadmap / TODO
+
+- [ ] Create an automated `.sh` launch script for **MacOS / Linux** environments.
+- [ ] Implement **UI Persistence**: Save configuration settings (IPs, Ports, FPS) using `localStorage` so they persist after refreshing the browser.
+- [ ] Add more complex gesture recognition presets.
+- [ ] Include multi-hand for larger Wekinator models.
 
 ---
 *Developed for interactive OSC explorations. [dev ref](https://github.com/carlesgutierrez/)*
