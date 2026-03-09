@@ -1,0 +1,30 @@
+# Environments
+venv/
+.env
+node_modules/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+pip-log.txt
+pip-delete-this-directory.txt
+.venv
+pip-wheel-metadata/
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# IDEs
+.vscode/
+.idea/
+
+# Build
+dist/
+build/
+*.spec

@@ -1,0 +1,198 @@
+/* ── Reset & Base ─────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:       #0a0c14;
+  --surface:  rgba(255,255,255,0.04);
+  --border:   rgba(255,255,255,0.08);
+  --accent:   #7c6fff;
+  --accent2:  #ff6fb5;
+  --green:    #4ade80;
+  --amber:    #fbbf24;
+  --red:      #f87171;
+  --text:     #e2e8f0;
+  --muted:    #64748b;
+  --mono:     'JetBrains Mono', monospace;
+  --sans:     'Inter', sans-serif;
+  --radius:   14px;
+  --glow:     0 0 24px rgba(124,111,255,0.25);
+}
+
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* ── Layout ───────────────────────────────────────────────────────────── */
+.app {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  grid-template-columns: 1fr 340px;
+  grid-template-areas: "header header" "main sidebar";
+  height: 100vh;
+  gap: 1px;
+  background: var(--border);
+}
+
+header {
+  grid-area: header;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 24px;
+  border-bottom: 1px solid var(--border);
+}
+
+.logo {
+  font-size: 18px;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: -0.5px;
+}
+
+.logo-sub {
+  font-size: 11px;
+  color: var(--muted);
+  font-family: var(--mono);
+}
+
+.header-spacer { flex: 1; }
+
+#status-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  font-size: 12px;
+}
+#status-badge.connected { color: var(--green); border-color: rgba(74,222,128,0.4); }
+#status-badge.disconnected { color: var(--red); border-color: rgba(248,113,113,0.3); }
+
+#fps-badge {
+  padding: 6px 12px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  font-size: 11px;
+  font-family: var(--mono);
+  color: var(--muted);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  transition: opacity 0.2s;
+}
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-danger { background: rgba(248,113,113,0.1); color: var(--red); border: 1px solid var(--red); }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ── Main (camera view) ───────────────────────────────────────────────── */
+main {
+  grid-area: main;
+  background: #000;
+  position: relative;
+  overflow: hidden;
+}
+
+#camera-wrap {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+/* Hide all native Handsfree elements as p5.js is handling the video feed */
+.handsfree-video, 
+.handsfree-canvas-video,
+.handsfree-debugger,
+#camera-wrap video,
+#camera-wrap canvas:not(.p5Canvas),
+body > .handsfree-debugger,
+body > .handsfree-video {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+
+/* P5.js wrapper overlay */
+#p5-wrap {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  z-index: 100 !important;
+  pointer-events: none;
+}
+
+.p5Canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.hidden { display: none !important; }
+
+/* ── Sidebar ──────────────────────────────────────────────────────────── */
+aside {
+  grid-area: sidebar;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  border-left: 1px solid var(--border);
+}
+
+.panel {
+  padding: 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.panel-title {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 14px;
+}
+
+.field { margin-bottom: 12px; }
+label { display: block; font-size: 11px; color: var(--muted); margin-bottom: 4px; }
+
+input[type="text"], input[type="number"] {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px;
+  color: var(--text);
+  font-family: var(--mono);
+}
+
+.field-row { display: grid; grid-template-columns: 1fr 80px; gap: 8px; }
+
+.osc-table { display: flex; flex-direction: column; gap: 2px; }
+.osc-row { display: grid; grid-template-columns: 1fr auto; font-size: 11px; padding: 2px 0; }
+.osc-addr { color: var(--muted); font-family: var(--mono); }
+.osc-val { color: var(--accent); font-family: var(--mono); text-align: right; }
+
+.finger-bars { display: flex; gap: 4px; height: 40px; align-items: flex-end; }
+.finger-bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; }
+.finger-bar-track { width: 100%; height: 30px; background: var(--surface); border-radius: 2px; position: relative; }
+.finger-bar-fill { width: 100%; background: var(--accent); position: absolute; bottom: 0; transition: height 0.1s; }
+.finger-bar-lbl { font-size: 9px; color: var(--muted); margin-top: 2px; }
+
+#log-strip { padding: 10px; font-size: 10px; color: var(--muted); border-top: 1px solid var(--border); }
