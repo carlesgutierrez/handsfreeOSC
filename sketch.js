@@ -37,7 +37,6 @@ const sketch = (p) => {
     
     p.clear();
   };
-
   p.windowResized = () => {
     const wrap = document.getElementById('camera-wrap');
     if (wrap) {
@@ -46,6 +45,20 @@ const sketch = (p) => {
       h = rect.height;
       p.resizeCanvas(w, h);
     }
+  };
+
+  p.triggerResize = () => {
+    // Delay slightly to wait for CSS transitions
+    setTimeout(() => p.windowResized(), 50);
+  };
+
+  p.updateCaptureSize = (nw, nh) => {
+    if (capture) {
+      capture.remove();
+    }
+    capture = p.createCapture(p.VIDEO);
+    capture.size(nw, nh);
+    capture.hide();
   };
 
   p.toScreen = (pt) => {
@@ -78,8 +91,13 @@ const sketch = (p) => {
     p.fill(0, 255, 0, 150);
     p.circle(15, 15, 8 + Math.sin(p.frameCount * 0.1) * 3);
     
-    p.fill(255, 255, 255, 150);
+    p.fill(255, 255, 255, 200);
     p.textFont('monospace');
+    p.textSize(10);
+    p.textAlign(p.LEFT, p.TOP);
+
+    
+    p.fill(255, 255, 255, 150);
     p.textSize(12);
     p.textAlign(p.LEFT, p.BOTTOM);
     const trackingStr = window.trackingFps ? `TRACKING: ${window.trackingFps} FPS` : 'TRACKING: --';
@@ -132,29 +150,16 @@ const sketch = (p) => {
       p.circle(pt.x, pt.y, 5);
     }
 
-    // 3. Draw Tips
+    // 3. Draw Tips (based on payload)
     for (let i = 0; i < 5; i++) {
       const key = FINGER_KEYS[i];
       const tipIdx = window.LANDMARKS[key];
       const pt = p.toScreen(lm[tipIdx]);
 
-      let curl = 0;
-      let dirIdx = 0;
-      if (pose && pose[i]) {
-        const [, curlName, dirName] = pose[i];
-        curl = window.CURL_VAL[curlName] || 0;
-        // Fix: Use regex to replace ALL spaces so "Diagonal Up Right" becomes "DiagonalUpRight"
-        dirIdx = window.DIRECTION_NAMES.indexOf(dirName.replace(/ /g, ''));
-
-        // CUSTOM THUMB DIRECTION OVERRIDE (Visual Arrow)
-        if (key === 'thumb') {
-          const tIP = lm[3];
-          const tTip = lm[4];
-          if (tIP && tTip) {
-            dirIdx = p.getDirectionFromPoints(tIP, tTip);
-          }
-        }
-      }
+      // NEW: Read from shared state for perfect sync
+      const fData = window.lastPayload ? window.lastPayload[key] : null;
+      const curl = fData ? fData.curl : 0;
+      const dirIdx = fData ? fData.direction : -1;
 
       let col;
       if (curl === 0) col = p.color(255, 255, 255);       

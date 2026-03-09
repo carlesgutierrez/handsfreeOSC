@@ -11,6 +11,9 @@ A web-based creative tool that visualizes hand tracking data in real-time using 
 - **Detailed Telemetry**: Computes (X,Y) coordinates for palm and all 5 fingertips.
 - **Fingerpose Integration**: Automatically calculates Finger Curl (Open, Half, Closed) and Direction Angles (Up, Down, Diagonal, etc.).
 - **Futuristic p5.js Visuals**: Clean, cyberpunk-inspired visualizer overlaying a dark-filtered camera feed.
+- **Toggle UI Mode**: Hide all side panels and the header with a single click or by pressing **[H]** for a data-only fullscreen experience.
+- **Hand Smoothing (Lerp)**: Built-in jitter reduction for smoother mapping in creative apps.
+- **Variable Resolution**: Choose between Performance (480p), HD (720p), and Full HD (1080p) tracking.
 - **Zero-Lag Architecture**: Uses WebSockets to pipe JSON directly out of the browser into local backend bridges.
 - **Auto FPS Sync**: Matches the broadcast rate perfectly to your webcam's capabilities to save CPU.
 - **Built-in Desktop App**: Python bridge with a modern `pywebview` interface.
@@ -42,7 +45,14 @@ This wraps the web interface into a standalone desktop window.
 npm run electron
 ```
 
-### 2. Alternative: Run in Browser
+### 3. Controls & Shortcuts
+- **[Start / Stop]**: Toggle the hand tracking engine.
+- **[Toggle UI] / [H]**: Hide/Show side panels for a clean view.
+- **[Smoothing Checkbox]**: Enable Lerp filter to reduce finger jitter.
+- **[Resolution Dropdown]**: Set the camera capture quality. *Note: Changing resolution restarts the tracking.*
+- **[Fullscreen Icon]**: Enter browser fullscreen mode.
+
+### 4. Alternative: Run in Browser
 If you prefer the browser, serve the directory:
 ```bash
 npx serve

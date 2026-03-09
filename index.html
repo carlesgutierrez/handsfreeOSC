@@ -90,6 +90,21 @@
           <label for="check-autofps" style="margin-bottom: 0; cursor: pointer;">Auto FPS (Match tracking speed)</label>
         </div>
       </div>
+
+      <div class="field">
+        <label>Camera & Smoothing</label>
+        <div class="field-row" style="grid-template-columns: 1fr;">
+          <select id="select-resolution">
+            <option value="640x480">640 x 480 (Performance)</option>
+            <option value="1280x720" selected>1280 x 720 (HD)</option>
+            <option value="1920x1080">1920 x 1080 (Full HD)</option>
+          </select>
+        </div>
+        <div style="margin-top: 10px; display: flex; align-items: center; gap: 8px;">
+          <input type="checkbox" id="check-smoothing" checked style="width: 14px; height: 14px; accent-color: var(--accent);" />
+          <label for="check-smoothing" style="margin-bottom: 0; cursor: pointer;">Enable Smoothing (Lerp)</label>
+        </div>
+      </div>
       <div class="btn-row">
         <button class="btn btn-primary" id="btn-start">▶ Start</button>
         <button class="btn btn-danger" id="btn-stop" disabled>■ Stop</button>

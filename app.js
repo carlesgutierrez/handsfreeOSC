@@ -59,27 +59,38 @@ let fpsCount = 0;
 window.currentHandData = null;
 window.currentPoseData = null;
 
-const btnStart    = document.getElementById('btn-start');
-const btnStop     = document.getElementById('btn-stop');
-const statusBadge = document.getElementById('status-badge');
-const statusText  = document.getElementById('status-text');
-const fpsBadge    = document.getElementById('fps-badge');
-const logStrip    = document.getElementById('log-text');
-const fpsSlider   = document.getElementById('fps-slider');
-const fpsSliderVal= document.getElementById('fps-slider-val');
-const checkAutoFps = document.getElementById('check-autofps');
-const btnToggleOsc = document.getElementById('btn-toggle-osc');
-const btnFullscreen= document.getElementById('btn-fullscreen');
-const oscTableContainer = document.getElementById('osc-table');
+// DOM Elements (assigned in init)
+let btnStart, btnStop, statusBadge, statusText, fpsBadge, logStrip, fpsSlider, fpsSliderVal, checkAutoFps, btnFullscreen, btnToggleUi, btnToggleOsc, selectRes, checkSmoothing, oscTableContainer;
 
 let isOscHidden = false;
+window.isSmoothing = true;
+let lastSmoothHand = null;
+const SMOOTH_FACTOR = 0.5; // Balances smoothness and responsiveness
 window.trackingFps = 0;
 let trackFpsCount = 0;
 let trackFpsTs = performance.now();
 
 // ── Initialization ───────────────────────────────────────────────────────────
 function init() {
+  // Bind Elements
+  btnStart    = document.getElementById('btn-start');
+  btnStop     = document.getElementById('btn-stop');
+  statusBadge = document.getElementById('status-badge');
+  statusText  = document.getElementById('status-text');
+  fpsBadge    = document.getElementById('fps-badge');
+  logStrip    = document.getElementById('log-text');
+  fpsSlider   = document.getElementById('fps-slider');
+  fpsSliderVal= document.getElementById('fps-slider-val');
+  checkAutoFps = document.getElementById('check-autofps');
+  btnFullscreen= document.getElementById('btn-fullscreen');
+  btnToggleUi  = document.getElementById('btn-toggle-ui');
+  btnToggleOsc = document.getElementById('btn-toggle-osc');
+  selectRes    = document.getElementById('select-resolution');
+  checkSmoothing=document.getElementById('check-smoothing');
+  oscTableContainer = document.getElementById('osc-table');
+
   buildOSCTable();
+  if (logStrip) logStrip.textContent = 'Ready.';
   
   fpsSlider.addEventListener('input', () => {
     const v = parseInt(fpsSlider.value, 10);
@@ -100,12 +111,28 @@ function init() {
   btnFullscreen.addEventListener('click', () => {
     if (!document.fullscreenElement) {
       document.documentElement.requestFullscreen().catch(err => {
-        log(`Error attempting to enable fullscreen: ${err.message}`);
+        if (logStrip) logStrip.textContent = `Error: ${err.message}`;
       });
     } else {
       document.exitFullscreen();
     }
   });
+
+  if (checkSmoothing) {
+    checkSmoothing.addEventListener('change', () => {
+      window.isSmoothing = checkSmoothing.checked;
+    });
+  }
+
+  if (selectRes) {
+    selectRes.addEventListener('change', () => {
+      if (window.isTracking) {
+        if (logStrip) logStrip.textContent = 'Changing resolution... Restarting tracking.';
+        stopTracking();
+        setTimeout(startTracking, 500);
+      }
+    });
+  }
 }
 
 function buildOSCTable() {
@@ -145,7 +172,9 @@ function startTracking() {
   connectWS();
   gestureEstimator = buildGestureEstimator();
 
-  if (!handsfree) {
+    // Calculate resolution
+    const [rw, rh] = selectRes.value.split('x').map(Number);
+
     handsfree = new Handsfree({
       hands: {
         enabled: true,
@@ -156,16 +185,23 @@ function startTracking() {
       setup: {
         wrap: { id: 'camera-wrap' },
       },
+      assets: {
+        video: { width: rw, height: rh }
+      },
       debugger: {
-        enabled: false, // Turned off so p5.js can handle the video exclusively
+        enabled: false, 
       }
     });
+    
+    // Also update p5 capture size
+    window.p5Instance?.updateCaptureSize(rw, rh);
 
     handsfree.use('osc-sender', (data) => {
       trackFpsCount++;
       const now = performance.now();
       if (now - trackFpsTs >= 1000) {
         window.trackingFps = trackFpsCount;
+        fpsBadge.textContent = `${window.trackingFps} fps`; // Fixed: now updates the badge
         trackFpsCount = 0; trackFpsTs = now;
         if (checkAutoFps.checked && window.trackingFps > 0) {
           sendInterval = 1000 / window.trackingFps;
@@ -176,7 +212,6 @@ function startTracking() {
       if (!data.hands) return;
       processHandData(data.hands);
     });
-  }
 
   handsfree.start().then(() => {
     // DO NOT DISABLE hands plugin yet to ensure video layer is generated
@@ -193,6 +228,16 @@ function stopTracking() {
   if (ws) { ws.close(); ws = null; }
   window.currentHandData = null; window.currentPoseData = null;
   fpsBadge.textContent = '— fps';
+  
+  // Clear the camera wrap content to avoid element accumulation
+  const wrap = document.getElementById('camera-wrap');
+  if (wrap) {
+    // Keep p5-wrap but clear everything else (the videos added by Handsfree)
+    const p5Wrap = document.getElementById('p5-wrap');
+    wrap.innerHTML = '';
+    if (p5Wrap) wrap.appendChild(p5Wrap);
+  }
+  
   log('Stopped.');
 }
 
@@ -231,8 +276,25 @@ function processHandData(handsData) {
   for (let i = 0; i < 4; i++) { if (handsData.landmarksVisible[i]) { handIdx = i; break; } }
   if (handIdx === -1) { window.currentHandData = null; window.currentPoseData = null; return; }
 
-  const lm = handsData.landmarks[handIdx];
-  if (!lm || lm.length < 21) return;
+  const lmRaw = handsData.landmarks[handIdx];
+  if (!lmRaw || lmRaw.length < 21) return;
+
+  // Smoothing (Lerp) logic
+  let lm = lmRaw;
+  if (window.isSmoothing) {
+    if (!lastSmoothHand) {
+      lastSmoothHand = JSON.parse(JSON.stringify(lmRaw));
+    } else {
+      for (let j = 0; j < lmRaw.length; j++) {
+        lastSmoothHand[j].x += (lmRaw[j].x - lastSmoothHand[j].x) * SMOOTH_FACTOR;
+        lastSmoothHand[j].y += (lmRaw[j].y - lastSmoothHand[j].y) * SMOOTH_FACTOR;
+      }
+      lm = lastSmoothHand;
+    }
+  } else {
+    lastSmoothHand = null;
+  }
+
   window.currentHandData = lm;
 
   const now = performance.now();
@@ -286,6 +348,8 @@ function processHandData(handsData) {
     
     payload[key] = entry;
   }
+  
+  window.lastPayload = payload; // SHARED STATE FOR P5
   sendJSON(payload);
   updateUI(payload, poseData);
 }
